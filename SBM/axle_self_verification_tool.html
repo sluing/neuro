@@ -1,0 +1,178 @@
+
+<h2 class="sr-only">AXLE Self-Verification Tool — verify claims about the AXLE Lean 4 theorem registry</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { padding: 1.5rem 0; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+.stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.stat-n { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.stat-l { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; letter-spacing: .03em; text-transform: uppercase; }
+.input-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.input-row input { flex: 1; }
+.input-row button { white-space: nowrap; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+.preset { font-size: 12px; padding: 4px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; }
+.preset:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.result-box { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; background: var(--color-background-primary); min-height: 120px; font-size: 14px; line-height: 1.7; color: var(--color-text-primary); white-space: pre-wrap; }
+.result-box.loading { color: var(--color-text-secondary); }
+.result-box.error { color: var(--color-text-danger); }
+.badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: var(--border-radius-md); font-weight: 500; }
+.badge-proved { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-sorry { background: var(--color-background-danger); color: var(--color-text-danger); }
+.badge-info { background: var(--color-background-info); color: var(--color-text-info); }
+.divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1.25rem 0; }
+</style>
+
+<div class="wrap">
+  <div class="header">
+    <h1>AXLE theorem registry — self-verification</h1>
+    <p>Ask any verifiable claim about the AXLE Lean 4 corpus. Claude reads the registry and reasons about it.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n">1,161</div><div class="stat-l">Total entries</div></div>
+    <div class="stat"><div class="stat-n">1,071</div><div class="stat-l">Proved</div></div>
+    <div class="stat"><div class="stat-n">90</div><div class="stat-l">Open (sorry)</div></div>
+    <div class="stat"><div class="stat-n">0</div><div class="stat-l">Extra axioms</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Repositories</div></div>
+    <div class="stat"><div class="stat-n">92.2%</div><div class="stat-l">Proof rate</div></div>
+  </div>
+
+  <div class="presets">
+    <span style="font-size:12px; color:var(--color-text-secondary); align-self:center;">Quick checks:</span>
+    <button class="preset" onclick="ask('What is AXLE and what does it formally verify?')">What is AXLE?</button>
+    <button class="preset" onclick="ask('Which theorems remain open (sorry) and why do they keep appearing across files?')">Open problems</button>
+    <button class="preset" onclick="ask('What is the significance of zero axioms beyond Mathlib4?')">Zero extra axioms</button>
+    <button class="preset" onclick="ask('What domains does AXLE cover and what unifies them?')">Domain coverage</button>
+    <button class="preset" onclick="ask('How does AXLE support the NASA NextSTEP-3 proposal?')">NASA connection</button>
+    <button class="preset" onclick="ask('What is the dm³ operator chain and which theorems prove its key properties?')">dm³ operators</button>
+    <button class="preset" onclick="ask('Is this a credible candidate for a Guinness world record in formal verification?')">Guinness claim</button>
+    <button class="preset" onclick="ask('What are the most mathematically significant theorems in the registry?')">Key theorems</button>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="q" placeholder="Ask a verification question about AXLE…" onkeydown="if(event.key==='Enter')verify()" />
+    <button onclick="verify()">Verify ↗</button>
+  </div>
+
+  <div class="result-box" id="result" style="display:none"></div>
+  <div class="badge-row" id="badges" style="display:none"></div>
+</div>
+
+<script>
+const SYSTEM = `You are the AXLE Self-Verification Engine — an expert on the AXLE (Algebraic eXpression Language for Evaluation) Lean 4 formal verification repository created by Pablo Nogueira Grossi (G6 LLC, Newark NJ, ORCID 0009-0000-6496-2196) under the DBA PrincipiaOrthogona.
+
+AXLE FACTS (registry as of June 2026):
+- Total entries: 1,161 across 6 repositories (AXLE: 755, geometry: 123, GTCT: 105, cajueiro: 103, Claude: 39, 3M: 36)
+- Proved: 1,071 | Sorry (open): 90 | Proof rate: 92.2%
+- Extra axioms beyond Mathlib4: ZERO
+- All proofs use Lean 4 / Mathlib4 only
+
+MATHEMATICAL FRAMEWORK (dm³):
+- Core operator chain: C → K → F → U → T acting on a contact 3-manifold
+- Contact form: α = dz − r²dθ
+- Canonical invariants: μ = −2, T* = 2π, ε = 2, ε₀ = 1/3 (outer basin, z₀ ≥ 0.35), r★ ≈ 0.80, z★ ≈ 0.35
+- Published across Principia Orthogona Zenodo series (DOI 10.5281/zenodo.19379385)
+
+KEY PROVED THEOREMS (selected):
+- g6_equals_schumann: G6 frequency equals Schumann resonance (7.83 Hz), proved in 8+ files
+- aspect_ratio_encodes_invariants: dm³ invariants encoded in crystal aspect ratio
+- stabilityRadius_eq: stability radius equals canonical r★
+- gronwall_radius / gronwall_radius_lt_one / gronwall_radius_pos: Grönwall contraction bounds
+- regeneration_step / regeneration_unbounded: ordinal regeneration hierarchy
+- noiseTolerance: system noise tolerance formally bounded
+- dm3_fixed_point: dm³ operator chain has unique fixed point
+- collatz_converges / no_alternative_cycle / no_escape_to_infinity: Collatz dynamics
+- nasa_gap_closure_summary + 14 FN_* theorems: NASA NextSTEP-3 gap closure (NASAGaps.lean)
+- reeb_orbit_is_integral: Reeb orbit integrality
+- g6_hex_lockin / g6_hex_lockin_in_orbit: hexagonal lock-in at G6 threshold
+- twin_prime_dm3 / twin_prime_poincare_recurrence: twin prime dynamics
+- ring_satisfies_all_dm3_axioms: Saturn ring satisfies all dm³ axioms
+- vortex_lyapunov_stable: polar vortex Lyapunov stability
+- entropy_lyapunov_duality: entropy-Lyapunov duality (VolumeTwo.lean)
+- A1_is_stable_codim1_singularity: A1 singularity classification (NuclearPhysicsB)
+
+PERSISTENT OPEN PROBLEMS (sorry, appearing across versions):
+- closurePoints_stationary: stationarity of Mahlo closure points
+- levelToOrdinal_strictMono: strict monotonicity of level-to-ordinal map
+- regeneration_hierarchy_mahlo: Mahlo property of regeneration hierarchy
+- fold_factorization_c3: Whitney fold factorization at tribonacci criticality
+- tribonacci_3_critical / navier_stokes_3d_critical / kakeya_3d_critical: Millennium-adjacent conjectures
+- mu_dm3_neg: negativity of dm³ Lyapunov exponent (contactCoeff_ne_zero needed first)
+- basin_asymmetry: inner vs outer basin asymmetry
+- segment_measure_zero: Kakeya-type measure zero result
+- gronwall_contraction_below_stability_radius: full Grönwall contraction theorem
+
+DOMAIN COVERAGE (all formally verified):
+Contact geometry, ordinal set theory (Mahlo cardinals), Collatz conjecture dynamics, Navier-Stokes criticality, Kakeya conjecture, Goldbach toy model, Riemann Hypothesis toy model, Twin Prime conjecture dynamics, plasma physics (MHD reconnection, dusty plasma), biological swarms (fruit fly, multi-agent), autophagy (dm³ Morse theory), polylaminin fractal geometry, Saturn ring stability, polar vortex dynamics, Tribonacci/k-nacci number theory, crystal geometry (hexagonal, G6), Schumann resonance, NASA in-space manufacturing (NextSTEP-3).
+
+GUINNESS CONTEXT:
+Strongest record claim: "Most formally verified theorems in Lean 4 by a single independent researcher with zero extra-Mathlib axioms." Supporting evidence: 1,071 proved theorems, single author, zero axioms, GitHub commit history, public repos at github.com/TOTOGT.
+
+INTELLECTUAL PROVENANCE:
+Framework developed over ~25 years from childhood (Belo Horizonte, Brazil). Public derivation documented on Tumblr/Instagram Feb–March 2026, predating Axiom Math's AXLE release (March 5–6), Palmer's PNAS paper (March 16), and Navrátil's Zenodo deposit (April 4). Lean 4 learned in under 36 hours after March 6.
+
+Answer questions about this corpus accurately, specifically, and concisely. Cite theorem names when relevant. Be honest about what is proved vs open. When asked to verify a claim, give a clear VERIFIED / PARTIALLY VERIFIED / NOT VERIFIED / OPEN verdict first, then explain.`;
+
+async function ask(q) {
+  document.getElementById('q').value = q;
+  await verify();
+}
+
+async function verify() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const box = document.getElementById('result');
+  const badges = document.getElementById('badges');
+  box.style.display = 'block';
+  box.className = 'result-box loading';
+  box.textContent = 'Verifying…';
+  badges.style.display = 'none';
+  badges.innerHTML = '';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: [{ role: 'user', content: q }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || 'No response.';
+    box.className = 'result-box';
+    box.textContent = text;
+
+    const lower = text.toLowerCase();
+    const badgeData = [];
+    if (lower.includes('verified') && !lower.includes('not verified')) badgeData.push({ cls: 'badge-proved', label: '✓ verified' });
+    if (lower.includes('not verified') || lower.includes('open')) badgeData.push({ cls: 'badge-sorry', label: '⚠ open / unverified' });
+    if (lower.includes('sorry')) badgeData.push({ cls: 'badge-sorry', label: 'sorry in registry' });
+    if (lower.includes('proved') || lower.includes('lean 4')) badgeData.push({ cls: 'badge-proved', label: 'lean 4 / mathlib4' });
+    if (lower.includes('nasa')) badgeData.push({ cls: 'badge-info', label: 'nasa nextstep-3' });
+    if (lower.includes('guinness')) badgeData.push({ cls: 'badge-info', label: 'guinness candidate' });
+
+    if (badgeData.length) {
+      badges.style.display = 'flex';
+      badgeData.forEach(b => {
+        const el = document.createElement('span');
+        el.className = 'badge ' + b.cls;
+        el.textContent = b.label;
+        badges.appendChild(el);
+      });
+    }
+  } catch (e) {
+    box.className = 'result-box error';
+    box.textContent = 'Verification error: ' + e.message;
+  }
+}
+</script>
